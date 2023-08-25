@@ -1,30 +1,27 @@
-import graphene
-from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
-from models import (
-    Artwork as ArtworkModel,
-    SeriesReference as SeriesReferenceModel,
-)
-from sqlalchemy.orm import sessionmaker
-
-Session = sessionmaker()
+from graphene import ObjectType, String, Int, List, Schema
+from graphene_sqlalchemy import SQLAlchemyObjectType
+from models import Series as SeriesModel, Scene as SceneModel
 
 
-class Artwork(SQLAlchemyObjectType):
-    class Meta:
-        model = ArtworkModel
+class SceneType(ObjectType):
+    id = Int()
+    seriesId = Int()
+    artworkId = Int()
+    sceneDescription = String()
 
 
-class SeriesReference(SQLAlchemyObjectType):
-    class Meta:
-        model = SeriesReferenceModel
+class Series(ObjectType):
+    id = Int()
+    title = String()
+    year = String()
+    imageUrl = String()
 
 
-class Query(graphene.ObjectType):
-    artwork = graphene.Field(Artwork, id=graphene.Int())
-    all_artworks = SQLAlchemyConnectionField(Artwork)
+class Query(ObjectType):
+    series = List(Series)
 
-    def resolve_artwork(self, info, id):
-        return Session.query(ArtworkModel).filter_by(id=id).first()
+    def resolve_series(self, info):
+        return SeriesModel.query.all()
 
 
-schema = graphene.Schema(query=Query)
+schema = Schema(query=Query)

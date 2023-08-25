@@ -2,22 +2,23 @@ import os
 
 from flask import Flask
 from flask_graphql import GraphQLView
-from graphene import ObjectType, String, Schema
+from graphene import ObjectType, String, Schema, List
 from flask_migrate import Migrate
 from flask_cors import CORS
 
-from db import db
 from models import (
-    Artwork as ArtworkModel,
-    SeriesReference as SeriesReferenceModel,
+    Series as SeriesModel,
 )
+from trakt_api import fetch_and_populate_series
+from db import db
+from schemas import schema
 
 
 class Query(ObjectType):
-    hello = String()
+    series = List(SeriesModel)  # GraphQL query to fetch series
 
-    def resolve_hello(self, info):
-        return "Hello, GraphQL!"
+    def resolve_series(self, info):
+        return SeriesModel.query.all()
 
 
 class Mutation(ObjectType):
@@ -49,8 +50,8 @@ def create_app(db_url=None):
     migrate = Migrate(app, db)  # noqa
 
     with app.app_context():
-        # Define the schema and add the GraphQL route
-        schema = Schema(query=Query, mutation=Mutation)
+        db.create_all()  # creating the db
+        # Define the GraphQL route
         app.add_url_rule(
             "/graphql",
             view_func=GraphQLView.as_view(
@@ -58,6 +59,8 @@ def create_app(db_url=None):
             ),
         )
 
-        db.create_all()  # creating the db
+        # fetch series from trakt
+        if SeriesModel.query.count() == 0:
+            fetch_and_populate_series()
 
     return app
