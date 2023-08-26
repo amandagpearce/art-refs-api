@@ -20,8 +20,8 @@ class Artwork(db.Model):
     artist = Column(String)
     size = Column(String)
     description = Column(String)
-    currentLocation = Column(String)
-    imageUrl = Column(String)
+    current_location = Column(String)
+    image_url = Column(String)
     scenes = db.relationship(
         "Scene", secondary=artwork_scene_association, back_populates="artworks"
     )
@@ -33,17 +33,26 @@ class Series(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     year = Column(Integer)
-    imageUrl = Column(String)
+    image_url = Column(String)
+
+
+class Movies(db.Model):
+    __tablename__ = "movies"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    year = Column(Integer)
+    image_url = Column(String)
 
 
 class SeriesReferences(db.Model):
-    __tablename__ = "seriesReferences"
+    __tablename__ = "series_references"
 
     id = Column(Integer, primary_key=True)
-    seriesId = Column(Integer, ForeignKey("artworks.id"))
+    series_id = Column(Integer, ForeignKey("artworks.id"))
     references = Column(Integer, ForeignKey("artworks.id"))
 
-    series = relationship("Artwork", foreign_keys=[seriesId])
+    series = relationship("Artwork", foreign_keys=[series_id])
     referenced_artwork = relationship("Artwork", foreign_keys=[references])
 
 
@@ -51,15 +60,15 @@ class Scene(db.Model):
     __tablename__ = "scenes"
 
     id = db.Column(db.Integer, primary_key=True)
-    seriesId = db.Column(
+    series_id = db.Column(
         db.Integer,
         db.ForeignKey("series.id"),
         nullable=False,
     )
-    artworkId = db.Column(
+    artwork_id = db.Column(
         db.Integer, db.ForeignKey("artworks.id"), nullable=False
     )
-    sceneDescription = db.Column(db.String, nullable=False)
+    scene_description = db.Column(db.String, nullable=False)
     artworks = db.relationship(
         "Artwork", secondary=artwork_scene_association, back_populates="scenes"
     )
