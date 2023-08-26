@@ -8,10 +8,16 @@ from flask_cors import CORS
 
 from models import (
     Series as SeriesModel,
+    Movies as MoviesModel,
+    Artwork as ArtworksModel,
 )
-from trakt_api import fetch_and_populate_series
+from trakt_api import fetch_and_populate_series, fetch_and_populate_movies
 from db import db
 from schemas import schema
+
+from sqlalchemy.sql import text
+
+# from populate_db import populate_db_from_sql_file
 
 
 class Query(ObjectType):
@@ -19,6 +25,9 @@ class Query(ObjectType):
 
     def resolve_series(self, info):
         return SeriesModel.query.all()
+
+    def resolve_movies(self, info):
+        return MoviesModel.query.all()
 
 
 class Mutation(ObjectType):
@@ -62,5 +71,37 @@ def create_app(db_url=None):
         # fetch series from trakt
         if SeriesModel.query.count() == 0:
             fetch_and_populate_series()
+
+        if MoviesModel.query.count() == 0:
+            fetch_and_populate_movies()
+
+        if ArtworksModel.query.count() == 0:
+            print("Artworks model found")
+
+            # Get the absolute path to the SQL file
+            sql_file_path = os.path.abspath("insert_queries.sql")
+
+            # Read the SQL queries from the file
+            with open(sql_file_path, "r") as sql_file:
+                queries = sql_file.read()
+
+            # Split the queries by semicolon to separate individual statements
+            statements = queries.split(";")
+
+            for statement in statements:
+                # Remove leading/trailing whitespace and newlines
+                statement = statement.strip()
+
+                # Skip empty statements
+                if not statement:
+                    continue
+
+                # Execute the statement using SQLAlchemy's session.execute()
+                db.session.execute(text(statement))
+
+            # Commit the changes
+            db.session.commit()
+
+            print("Artworks model populated successfully!")
 
     return app
