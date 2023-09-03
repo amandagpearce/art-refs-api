@@ -76,34 +76,4 @@ def create_app(db_url=None):
 
         if MoviesModel.query.count() == 0:
             fetch_and_populate_movies()
-
-        if ArtworksModel.query.count() == 0:
-            print("Artworks model found")
-
-            # Get the absolute path to the SQL file
-            sql_file_path = os.path.abspath("insert_queries.sql")
-
-            # Read the SQL queries from the file
-            with open(sql_file_path, "r") as sql_file:
-                queries = sql_file.read()
-
-            # Split the queries by semicolon to separate individual statements
-            statements = queries.split(";")
-
-            for statement in statements:
-                # Remove leading/trailing whitespace and newlines
-                statement = statement.strip()
-
-                # Skip empty statements
-                if not statement:
-                    continue
-
-                # Execute the statement using SQLAlchemy's session.execute()
-                db.session.execute(text(statement))
-
-            # Commit the changes
-            db.session.commit()
-
-            print("Artworks model populated successfully!")
-
     return app
