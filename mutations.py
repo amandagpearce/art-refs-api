@@ -1,4 +1,5 @@
 import graphene
+import requests
 from models import (
     Artwork,
     Series,
@@ -26,6 +27,33 @@ class AddNewInformationMutation(graphene.Mutation):
 
     success = graphene.Boolean()
     message = graphene.String()
+
+    # Function to make the API call and retrieve the URL
+    @staticmethod
+    def retrieve_artwork_url(artworkId, artist, artworkTitle):
+        # Make your API call here to retrieve the URL based on artist and artworkTitle
+        # Replace the following line with your actual API call
+        response = requests.get(
+            "http://127.0.0.1:5000/get_image_url",
+            params={
+                "artist": artist,
+                "artworkTitle": artworkTitle,
+                "artworkId": artworkId,
+            },
+        )
+
+        # Check if the API call was successful
+        if response.status_code == 200:
+            # Assuming your API response contains the URL, extract it
+            artwork_url = response.json().get("imageUrl")
+
+            print("artwork_url")
+            print(artwork_url)
+
+            return artwork_url
+        else:
+            # Handle the case where the API call fails
+            return None
 
     def mutate(
         self,
@@ -65,8 +93,19 @@ class AddNewInformationMutation(graphene.Mutation):
                 description=description,
             )
             db.session.add(new_artwork)
-            db.session.commit()
+            db.session.flush()  # Use flush instead of commit to get the id
             artwork_id = new_artwork.id
+            artwork_url = AddNewInformationMutation.retrieve_artwork_url(
+                artwork_id, artist, artworkTitle
+            )
+
+            print("artwork_url")
+            print(artwork_url)
+
+            # Set the imageUrl attribute with the retrieved artwork_url
+            new_artwork.imageUrl = artwork_url
+
+            db.session.commit()  # Commit the changes after retrieving the id and setting the imageUrl
 
         # Check if the series or movie already exists
         if productionType == "series":
@@ -134,3 +173,23 @@ class AddNewInformationMutation(graphene.Mutation):
         return AddNewInformationMutation(
             success=True, message="Information added successfully"
         )
+
+
+# mutation {
+#   addNewInformation(
+#     artist: "Frida Kahlo",
+#     artworkTitle: "Self-Portrait as a Tehuana",
+#     year: 1943,
+#     size: "76 cm x 61 cm",
+#     currentLocation: "North Carolina Museum of Art",
+#     description: "The original piece, Kahlo’s Self Portrait as a Tehuana, was painted the year of her divorce from fellow artist and ex-husband Diego Rivera and is said to be symbolic of her inability to stop thinking about him. It goes by two other names: Diego in My Thoughts and Thinking of Diego, and presumably makes reference to the intense dynamic between Jules and Rue in the show.",
+#     productionTitle: "Euphoria",
+#     season: 2,
+#     episode: 4,
+#     productionType: "series",
+#     sceneDescription: "Jules recreates a famous work of art by Frida Kahlo, appearing with a portrait of love interest Rue painted on her forehead."
+#   ) {
+#     success
+#     message
+#   }
+# }
