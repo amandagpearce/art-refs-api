@@ -1,38 +1,51 @@
 from graphene import ObjectType, String, Int, List, Schema
 from graphene_sqlalchemy import SQLAlchemyObjectType
+from mutations import AddNewInformationMutation
 
 from models import (
     Series as SeriesModel,
-    Scene as SceneModel,
+    MovieScene as MovieSceneModel,
+    SeriesScene as SeriesceneModel,
     Movies as MoviesModel,
     Artwork as ArtworksModel,
 )
 
 
-class SceneType(ObjectType):
+class SeriesSceneType(ObjectType):
     id = Int()
-    series_id = Int()
-    artwork_id = Int()
-    scene_description = String()
+    seriesId = Int()
+    artworkId = Int()
+    sceneDescription = String()
+
+
+class MovieSceneType(ObjectType):
+    id = Int()
+    artworkId = Int()
+    sceneDescription = String()
+
+
+class SceneType(ObjectType):
+    series_scene = List(SeriesSceneType)
+    movie_scene = List(MovieSceneType)
 
 
 class Series(ObjectType):
     id = Int()
-    title = String()
+    productionTitle = String()
     year = String()
     imageUrl = String()
 
 
 class Movies(ObjectType):
     id = Int()
-    title = String()
+    productionTitle = String()
     year = String()
     imageUrl = String()
 
 
 class ArtworkType(ObjectType):
     id = Int()
-    title = String()
+    artworkTitle = String()
     year = Int()
     artist = String()
     size = String()
@@ -53,4 +66,8 @@ class Query(ObjectType):
         return MoviesModel.query.all()
 
 
-schema = Schema(query=Query)
+class Mutation(ObjectType):
+    addNewInformation = AddNewInformationMutation.Field()
+
+
+schema = Schema(query=Query, mutation=Mutation)
