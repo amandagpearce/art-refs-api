@@ -1,5 +1,6 @@
 from graphene import ObjectType, String, Int, List, Schema
 from graphene_sqlalchemy import SQLAlchemyObjectType
+
 from models import (
     Series as SeriesModel,
     Scene as SceneModel,
@@ -12,21 +13,21 @@ class SceneType(ObjectType):
     id = Int()
     series_id = Int()
     artwork_id = Int()
-    sceneDescription = String()
+    scene_description = String()
 
 
 class Series(ObjectType):
     id = Int()
     title = String()
     year = String()
-    image_url = String()
+    imageUrl = String()
 
 
 class Movies(ObjectType):
     id = Int()
     title = String()
     year = String()
-    image_url = String()
+    imageUrl = String()
 
 
 class ArtworkType(ObjectType):
@@ -37,8 +38,8 @@ class ArtworkType(ObjectType):
     size = String()
     description = String()
     current_location = String()
-    image_url = String()
-    scenes = List("SceneType")  # Assuming SceneType is defined similarly
+    imageUrl = String()
+    scenes = List("SceneType")
 
 
 class Query(ObjectType):
@@ -50,9 +51,6 @@ class Query(ObjectType):
 
     def resolve_movies(self, info):
         return MoviesModel.query.all()
-
-    def resolve_artworks(self, info):
-        return ArtworksModel.query.all()
 
 
 schema = Schema(query=Query)

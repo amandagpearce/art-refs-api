@@ -21,7 +21,7 @@ class Artwork(db.Model):
     size = Column(String)
     description = Column(String)
     current_location = Column(String)
-    image_url = Column(String)
+    imageUrl = Column(String)
     scenes = db.relationship(
         "Scene", secondary=artwork_scene_association, back_populates="artworks"
     )
@@ -33,7 +33,7 @@ class Series(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     year = Column(Integer)
-    image_url = Column(String)
+    imageUrl = Column(String)
 
 
 class Movies(db.Model):
@@ -42,7 +42,7 @@ class Movies(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     year = Column(Integer)
-    image_url = Column(String)
+    imageUrl = Column(String)
 
 
 class SeriesReferences(db.Model):

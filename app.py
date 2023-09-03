@@ -21,7 +21,8 @@ from sqlalchemy.sql import text
 
 
 class Query(ObjectType):
-    series = List(SeriesModel)  # GraphQL query to fetch series
+    series = List(SeriesModel)
+    movies = List(MoviesModel)
 
     def resolve_series(self, info):
         return SeriesModel.query.all()
@@ -60,6 +61,7 @@ def create_app(db_url=None):
 
     with app.app_context():
         db.create_all()  # creating the db
+
         # Define the GraphQL route
         app.add_url_rule(
             "/graphql",

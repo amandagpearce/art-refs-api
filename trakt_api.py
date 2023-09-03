@@ -70,6 +70,9 @@ def fetch_and_populate_series():
             if series_data:
                 series = series_data[0]  # Get the first result from search
 
+                json_formatted_str = json.dumps(series, indent=2)
+                print(json_formatted_str)
+
                 trakt_id = series["show"]["ids"]["trakt"]
                 series_title = series["show"]["title"]
                 series_year = series["show"]["year"]
@@ -83,7 +86,7 @@ def fetch_and_populate_series():
                         id=trakt_id,
                         title=series_title,
                         year=series_year,
-                        image_url=poster_url,
+                        imageUrl=poster_url,
                     )
                     db.session.add(series_model)
                     db.session.commit()
@@ -112,8 +115,8 @@ def fetch_and_populate_movies():
 
                 print("movie_data_found")
                 # print(movie_data_found)
-                json_formatted_str = json.dumps(movie_data_found, indent=2)
-                print(json_formatted_str)
+                # json_formatted_str = json.dumps(movie_data_found, indent=2)
+                # print(json_formatted_str)
 
                 trakt_id = movie_data_found["movie"]["ids"]["trakt"]
                 movie_title = movie_data_found["movie"]["title"]
@@ -131,7 +134,7 @@ def fetch_and_populate_movies():
                         id=trakt_id,
                         title=movie_title,
                         year=movie_year,
-                        image_url=poster_url,
+                        imageUrl=poster_url,
                     )
                     db.session.add(movie_model)
                     db.session.commit()
