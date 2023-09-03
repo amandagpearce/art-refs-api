@@ -84,7 +84,7 @@ def fetch_and_populate_series():
                 if trakt_id and series_title and series_year and poster_url:
                     series_model = SeriesModel(
                         id=trakt_id,
-                        title=series_title,
+                        productionTitle=series_title,
                         year=series_year,
                         imageUrl=poster_url,
                     )
@@ -132,7 +132,7 @@ def fetch_and_populate_movies():
                 if trakt_id and movie_title and movie_year and poster_url:
                     movie_model = MoviesModel(
                         id=trakt_id,
-                        title=movie_title,
+                        productionTitle=movie_title,
                         year=movie_year,
                         imageUrl=poster_url,
                     )
