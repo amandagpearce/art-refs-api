@@ -6,3 +6,9 @@ class MoviesType(ObjectType):
     productionTitle = String()
     year = String()
     imageUrl = String()
+
+
+class MovieSceneType(ObjectType):
+    id = Int()
+    artworkId = Int()
+    sceneDescription = String()
