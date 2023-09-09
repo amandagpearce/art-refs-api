@@ -1,10 +1,10 @@
-from graphene import ObjectType, Field, List
+from graphene import ObjectType, Field, List, Int, String
 
-from series.types import SeriesType
-
-
-from movies.types import MoviesType
+from series.types import SeriesType, SeriesSceneType
 from series.queries import SeriesQuery
+
+
+from movies.types import MoviesType, MovieSceneType
 from movies.queries import MoviesQuery
 
 from shared.mutations import AddInformationMutation
@@ -21,6 +21,20 @@ class RootQuery(ObjectType):
     )
     seriesQuery = Field(SeriesQuery)
     moviesQuery = Field(MoviesQuery)
+
+    series_scenes = Field(
+        List(SeriesSceneType),
+        productionId=Int(),
+        productionType=String(required=True),
+        resolver=SeriesQuery.resolve_scenes,  # Assuming SeriesQuery has a resolver for series scenes
+    )
+
+    movie_scenes = Field(
+        List(MovieSceneType),
+        productionId=Int(),
+        productionType=String(required=True),
+        resolver=MoviesQuery.resolve_scenes,  # Assuming MoviesQuery has a resolver for movie scenes
+    )
 
 
 class RootMutation(ObjectType):

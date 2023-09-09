@@ -1,4 +1,5 @@
-from graphene import ObjectType, String, ID, Int
+from graphene import ObjectType, String, ID, Int, List
+from artwork.types import ArtworkType
 
 
 class SeriesType(ObjectType):
@@ -13,3 +14,4 @@ class SeriesSceneType(ObjectType):
     seriesId = Int()
     artworkId = Int()
     sceneDescription = String()
+    artworks = List(ArtworkType)

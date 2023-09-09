@@ -1,6 +1,6 @@
 from graphene import ObjectType, ID, List
 from artwork.models import Artwork as ArtworksModel
-from artwork.schema import ArtworkAndSceneType
+from artwork.types import ArtworkAndSceneType
 from movies.models import Movies as MoviesModel, MovieScene as MovieSceneModel
 from movies.types import MoviesType
 
@@ -13,7 +13,7 @@ class MoviesQuery(ObjectType):
     def resolve_movies(self, info):
         return MoviesModel.query.all()
 
-    def resolve_movie_references(self, info, itemId):
+    def resolve_scenes(self, info, itemId):
         combined_references = []
 
         # Example: Fetch references for a movie
@@ -42,9 +42,7 @@ class MoviesQuery(ObjectType):
                         "currentLocation": artwork.currentLocation,
                         "description": artwork.description,
                         "imageUrl": artwork.imageUrl,
-                        # Add other fields from MovieSceneModel as needed
                         "sceneDescription": movie_ref.sceneDescription,
-                        # Include season and episode if needed
                     }
                     combined_references.append(combined_reference)
 

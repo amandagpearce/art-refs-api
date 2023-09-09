@@ -1,8 +1,8 @@
-from graphene import ObjectType, List
+from graphene import ObjectType, Union, List
 from series.types import SeriesSceneType
-from movies.schema import MovieSceneType
+from movies.types import MovieSceneType
 
 
-class SceneType(ObjectType):
-    series_scene = List(SeriesSceneType)
-    movie_scene = List(MovieSceneType)
+class SceneType(Union):
+    class Meta:
+        types = (SeriesSceneType, MovieSceneType)
