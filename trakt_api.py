@@ -1,10 +1,11 @@
 import os
 import requests
-from models import Series as SeriesModel, Movies as MoviesModel
 from db import db
 import json
-
 from dotenv import load_dotenv
+from series.models import Series as SeriesModel
+from movies.models import Movies as MoviesModel
+
 
 load_dotenv()
 trakt_api_key = os.getenv("TRAKT_API_KEY")

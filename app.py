@@ -2,40 +2,22 @@ import os
 
 from flask import Flask
 from flask_graphql import GraphQLView
-from graphene import ObjectType, String, Schema, List
 from flask_migrate import Migrate
 from flask_cors import CORS
+from graphene import Schema
 
-from models import (
-    Series as SeriesModel,
-    Movies as MoviesModel,
-    Artwork as ArtworksModel,
-)
+
 from trakt_api import fetch_and_populate_series, fetch_and_populate_movies
 from db import db
-from schemas import schema
-
-from sqlalchemy.sql import text
-
-# from populate_db import populate_db_from_sql_file
 
 
-class Query(ObjectType):
-    series = List(SeriesModel)
-    movies = List(MoviesModel)
-
-    def resolve_series(self, info):
-        return SeriesModel.query.all()
-
-    def resolve_movies(self, info):
-        return MoviesModel.query.all()
-
-
-class Mutation(ObjectType):
-    add_todo = String(task=String())
-
-    def resolve_add_todo(self, info, task):
-        return f"Added task: {task}"
+from graphene import ObjectType
+from series.queries import SeriesQuery
+from movies.queries import MoviesQuery
+from series.mutations import SeriesMutation
+from movies.mutations import MoviesMutation
+from series.models import Series as SeriesModel
+from movies.models import Movies as MoviesModel
 
 
 def create_app(db_url=None):
@@ -62,11 +44,22 @@ def create_app(db_url=None):
     with app.app_context():
         db.create_all()  # creating the db
 
-        # Define the GraphQL route
+        # Define a placeholder ObjectType as the initial query type
+        series_schema = Schema(query=SeriesQuery, mutation=SeriesMutation)
+        movies_schema = Schema(query=MoviesQuery, mutation=MoviesMutation)
+
+        # Define endpoints for Series and Movies
         app.add_url_rule(
-            "/graphql",
+            "/graphql/series",
             view_func=GraphQLView.as_view(
-                "graphql", schema=schema, graphiql=True
+                "graphql_series", schema=series_schema, graphiql=True
+            ),
+        )
+
+        app.add_url_rule(
+            "/graphql/movies",
+            view_func=GraphQLView.as_view(
+                "graphql_movies", schema=movies_schema, graphiql=True
             ),
         )
 
