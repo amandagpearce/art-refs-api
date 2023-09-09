@@ -1,18 +1,25 @@
 import graphene
 import requests
+
+from artwork.models import Artwork
+from series.models import Series, SeriesScene
+from movies.models import Movies, MovieScene
 from shared.models import artwork_scene_association
 from db import db
 
 
 class AddInformationMutation(graphene.Mutation):
     class Arguments:
+        productionType = graphene.String(required=True)
         artist = graphene.String(required=True)
         artworkTitle = graphene.String(required=True)
         year = graphene.Int(required=True)
         size = graphene.String(required=True)
         currentLocation = graphene.String(required=True)
         description = graphene.String(required=True)
-        productionTitle = graphene.String(required=True)
+        productionTitle = graphene.String()
+        season = graphene.Int()
+        episode = graphene.Int()
         sceneDescription = graphene.String()
 
     success = graphene.Boolean()
@@ -20,9 +27,10 @@ class AddInformationMutation(graphene.Mutation):
 
     @staticmethod
     def retrieve_artwork_url(artworkId, artist, artworkTitle):
-        # retrieve the URL based on artist and artworkTitle
+        # Make your API call here to retrieve the URL based on artist and artworkTitle
+        # Replace the following line with your actual API call
         response = requests.get(
-            "http://127.0.0.1:5000/get_image_url",
+            "http://127.0.0.1:9000/get_image_url",
             params={
                 "artist": artist,
                 "artworkTitle": artworkTitle,
@@ -30,19 +38,101 @@ class AddInformationMutation(graphene.Mutation):
             },
         )
 
-        # Check if the API call was successful and extract the artwork_url
         if response.status_code == 200:
-            # Assuming your API response contains the URL, extract it
             artwork_url = response.json().get("imageUrl")
-
-            print("artwork_url")
-            print(artwork_url)
-
             return artwork_url
         else:
-            # Handle the case where the API call fails
             return None
 
+    def create_or_get_artwork(
+        artist, artworkTitle, year, size, currentLocation, description
+    ):
+        existing_artwork = Artwork.query.filter_by(
+            artist=artist, artworkTitle=artworkTitle
+        ).first()
+
+        if existing_artwork:
+            artwork_id = existing_artwork.id
+        else:
+            new_artwork = Artwork(
+                artist=artist,
+                artworkTitle=artworkTitle,
+                year=year,
+                size=size,
+                currentLocation=currentLocation,
+                description=description,
+            )
+            db.session.add(new_artwork)
+            db.session.flush()
+            artwork_id = new_artwork.id
+            artwork_url = AddInformationMutation.retrieve_artwork_url(
+                artwork_id, artist, artworkTitle
+            )
+            new_artwork.imageUrl = artwork_url
+            db.session.commit()
+
+        return artwork_id
+
+    def create_or_get_production(productionType, productionTitle):
+        if productionType == "series":
+            existing_production = Series.query.filter_by(
+                productionTitle=productionTitle
+            ).first()
+        else:
+            existing_production = Movies.query.filter_by(
+                productionTitle=productionTitle
+            ).first()
+
+        if existing_production:
+            production_id = existing_production.id
+        else:
+            if productionType == "series":
+                new_production = Series(productionTitle=productionTitle)
+            else:
+                new_production = Movies(productionTitle=productionTitle)
+
+            db.session.add(new_production)
+            db.session.commit()
+            production_id = new_production.id
+
+        return production_id
+
+    def create_scene(
+        productionType,
+        production_id,
+        artwork_id,
+        season,
+        episode,
+        sceneDescription,
+    ):
+        if productionType == "series":
+            new_scene = SeriesScene(
+                seriesId=production_id,
+                artworkId=artwork_id,
+                season=season,
+                episode=episode,
+                sceneDescription=sceneDescription,
+            )
+        else:
+            new_scene = MovieScene(
+                artworkId=artwork_id,
+                sceneDescription=sceneDescription,
+            )
+
+        db.session.add(new_scene)
+        db.session.commit()
+
+        return new_scene
+
+    def add_to_association(artworkId, sceneId):
+        db.session.execute(
+            artwork_scene_association.insert().values(
+                artworkId=artworkId, sceneId=sceneId
+            )
+        )
+        db.session.commit()
+
+    # @staticmethod
     def mutate(
         self,
         info,
@@ -52,67 +142,64 @@ class AddInformationMutation(graphene.Mutation):
         size,
         currentLocation,
         description,
-        productionTitle,
-        sceneDescription,
+        productionType,
+        productionTitle=None,
+        season=None,
+        episode=None,
+        sceneDescription=None,
     ):
-        # Check if the series or movie already exists
-        existing_production = self.get_existing_production(productionTitle)
+        print(productionType)
+        if productionType not in ["series", "movie"]:
+            return AddInformationMutation(success=False, message="Invalid type")
 
-        if existing_production:
-            production_id = existing_production.id
-        else:
-            new_production = self.create_new_production(productionTitle)
-            production_id = new_production.id
-
-        # Check if a scene with the same production_id and artworkTitle already exists
-        existing_scene = self.get_existing_scene(production_id, artworkTitle)
-
-        if existing_scene:
-            return self.return_error_message("Scene record already exists.")
-
-        # Create a new scene
-        new_scene = self.create_new_scene(
-            production_id,
-            artworkTitle,
+        print("###")
+        print("artist")
+        print(artist)
+        print("artworkTitle")
+        print(artworkTitle)
+        print("year")
+        print(
             year,
-            size,
-            currentLocation,
-            description,
-            sceneDescription,
+        )
+        print("size")
+        print(size)
+        print("currentLocation")
+        print(currentLocation)
+        print("description")
+        print(description)
+        print("###")
+
+        artwork_id = AddInformationMutation.create_or_get_artwork(
+            artist, artworkTitle, year, size, currentLocation, description
+        )
+        production_id = AddInformationMutation.create_or_get_production(
+            productionType, productionTitle
         )
 
-        # Now, add the record to the artwork_scene_association table
-        self.add_to_association(artworkId=new_scene.id, sceneId=new_scene.id)
+        if productionType == "series":
+            existing_scene = SeriesScene.query.filter_by(
+                seriesId=production_id, artworkId=artwork_id
+            ).first()
+        else:
+            existing_scene = MovieScene.query.filter_by(
+                artworkId=artwork_id
+            ).first()
 
-        return self.return_success_message("Information added successfully")
+        if existing_scene:
+            return AddInformationMutation(
+                success=False, message="Scene record already exists."
+            )
 
-    # Methods to be implemented in specific mutations
-    def get_existing_production(self, productionTitle):
-        raise NotImplementedError()
+        new_scene = AddInformationMutation.create_scene(
+            productionType,
+            production_id,
+            artwork_id,
+            season,
+            episode,
+            sceneDescription,
+        )
+        AddInformationMutation.add_to_association(artwork_id, new_scene.id)
 
-    def create_new_production(self, productionTitle):
-        raise NotImplementedError()
-
-    def get_existing_scene(self, production_id, artworkTitle):
-        raise NotImplementedError()
-
-    def create_new_scene(
-        self,
-        production_id,
-        artworkTitle,
-        year,
-        size,
-        currentLocation,
-        description,
-        sceneDescription,
-    ):
-        raise NotImplementedError()
-
-    def add_to_association(self, artworkId, sceneId):
-        raise NotImplementedError()
-
-    def return_error_message(self, message):
-        return AddInformationMutation(success=False, message=message)
-
-    def return_success_message(self, message):
-        return AddInformationMutation(success=True, message=message)
+        return AddInformationMutation(
+            success=True, message="Information added successfully"
+        )
