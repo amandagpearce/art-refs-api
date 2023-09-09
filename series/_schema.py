@@ -9,4 +9,4 @@ class SeriesSceneType(ObjectType):
     sceneDescription = String()
 
 
-schema = Schema(query=SeriesQuery)
+# schema = Schema(query=SeriesQuery)

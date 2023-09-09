@@ -9,13 +9,9 @@ from graphene import Schema
 
 from trakt_api import fetch_and_populate_series, fetch_and_populate_movies
 from db import db
+from root_schema import RootMutation, RootQuery
 
 
-from graphene import ObjectType
-from series.queries import SeriesQuery
-from movies.queries import MoviesQuery
-from series.mutations import SeriesMutation
-from movies.mutations import MoviesMutation
 from series.models import Series as SeriesModel
 from movies.models import Movies as MoviesModel
 
@@ -44,22 +40,13 @@ def create_app(db_url=None):
     with app.app_context():
         db.create_all()  # creating the db
 
-        # Define a placeholder ObjectType as the initial query type
-        series_schema = Schema(query=SeriesQuery, mutation=SeriesMutation)
-        movies_schema = Schema(query=MoviesQuery, mutation=MoviesMutation)
+        schema = Schema(query=RootQuery, mutation=RootMutation)
 
         # Define endpoints for Series and Movies
         app.add_url_rule(
-            "/graphql/series",
+            "/graphql",
             view_func=GraphQLView.as_view(
-                "graphql_series", schema=series_schema, graphiql=True
-            ),
-        )
-
-        app.add_url_rule(
-            "/graphql/movies",
-            view_func=GraphQLView.as_view(
-                "graphql_movies", schema=movies_schema, graphiql=True
+                "graphql", schema=schema, graphiql=True
             ),
         )
 

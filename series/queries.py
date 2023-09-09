@@ -9,16 +9,20 @@ from series.types import SeriesType
 class SeriesQuery(ObjectType):
     series = List(SeriesType)
 
+    def resolve_series(self, info):
+        print("##### SeriesModel.query.all()")
+        print(SeriesModel.query.all())
+        print("########################")
+
+        return SeriesModel.query.all()
+
     references = List(
         ArtworkAndSceneType,
         itemId=ID(required=True),
         productionType=String(required=True),
     )
 
-    def resolve_series(self, info):
-        return SeriesModel.query.all()
-
-    def resolve_series_references(self, info, itemId):
+    def resolve_references(self, info, itemId):
         combined_references = []
 
         # Example: Fetch references for a series

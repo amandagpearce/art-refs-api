@@ -1,5 +1,5 @@
 from graphene import ObjectType, List
-from series.schema import SeriesSceneType
+from series.types import SeriesSceneType
 from movies.schema import MovieSceneType
 
 
