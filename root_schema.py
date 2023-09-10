@@ -7,7 +7,10 @@ from series.queries import SeriesQuery
 from movies.types import MoviesType, MovieSceneType
 from movies.queries import MoviesQuery
 
-from shared.mutations import AddInformationMutation
+from shared.mutations import (
+    AddInformationMutation,
+    AddReferenceToApproveMutation,
+)
 
 
 class RootQuery(ObjectType):
@@ -26,19 +29,20 @@ class RootQuery(ObjectType):
         List(SeriesSceneType),
         productionId=Int(),
         productionType=String(required=True),
-        resolver=SeriesQuery.resolve_scenes,  # Assuming SeriesQuery has a resolver for series scenes
+        resolver=SeriesQuery.resolve_scenes,
     )
 
     movie_scenes = Field(
         List(MovieSceneType),
         productionId=Int(),
         productionType=String(required=True),
-        resolver=MoviesQuery.resolve_scenes,  # Assuming MoviesQuery has a resolver for movie scenes
+        resolver=MoviesQuery.resolve_scenes,
     )
 
 
 class RootMutation(ObjectType):
     add_information = AddInformationMutation.Field()
+    create_reference = AddReferenceToApproveMutation.Field()
 
 
 # mutation {
@@ -48,7 +52,7 @@ class RootMutation(ObjectType):
 #     year: 1943,
 #     size: "76 cm x 61 cm",
 #     currentLocation: "North Carolina Museum of Art",
-#     description: "The original piece, Kahlo’s Self Portrait as a Tehuana...",
+#     description: "The depth of emotion and symbolism in this artwork is striking. Kahlo\'s gaze is intense and introspective, conveying a sense of self-awareness and resilience. The Tehuana costume becomes a powerful symbol of both her Mexican heritage and her personal struggle with physical and emotional pain. It is within these layers of symbolism that viewers can explore the complexities of Kahlo\'s life and her unapologetic approach to self-representation. \"Self-Portrait as a Tehuana\" continues to resonate with art enthusiasts worldwide, not only for its technical brilliance but also for its ability to evoke a profound sense of empathy and connection with the artist\'s tumultuous life journey.",
 #     productionType: "series",
 #     productionTitle: "Euphoria",
 #     season: 2,

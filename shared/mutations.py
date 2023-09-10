@@ -1,10 +1,24 @@
 import graphene
+from graphene import ObjectType
 import requests
+import boto3
+import os
+import mimetypes
+from botocore.exceptions import NoCredentialsError
+from uuid import uuid4
+from dotenv import load_dotenv
+import threading
+import base64
+import io
+
+from graphene_file_upload.scalars import Upload  # Import the Upload scalar
+from graphql import GraphQLError
 
 from artwork.models import Artwork
 from series.models import Series, SeriesScene
 from movies.models import Movies, MovieScene
-from shared.models import artwork_scene_association
+from shared.models import artwork_scene_association, References
+from shared.types import ReferencesType
 from db import db
 
 
@@ -203,3 +217,95 @@ class AddInformationMutation(graphene.Mutation):
         return AddInformationMutation(
             success=True, message="Information added successfully"
         )
+
+
+class AddReferenceToApproveMutation(graphene.Mutation):
+    class Arguments:
+        productionType = graphene.String(required=True)
+        productionTitle = graphene.String(required=True)
+        productionYear = graphene.Int(required=True)
+        season = graphene.Int()
+        episode = graphene.Int()
+        artist = graphene.String(required=True)
+        artworkTitle = graphene.String(required=True)
+        artworkDescription = graphene.String()
+        artworkYear = graphene.Int()
+        size = graphene.String()
+        currentLocation = graphene.String()
+        sceneDescription = graphene.String()
+        sceneImgUrl = graphene.String()
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(
+        self,
+        info,
+        productionType,
+        productionTitle,
+        productionYear,
+        artist,
+        artworkTitle,
+        sceneDescription,
+        artworkDescription=None,
+        season=None,
+        episode=None,
+        artworkYear=None,
+        size=None,
+        currentLocation=None,
+        sceneImgUrl=None,
+    ):
+        print("sceneImgUrl")
+        print(sceneImgUrl)
+        # Create a new reference object
+        new_reference = References(
+            productionType=productionType,
+            productionTitle=productionTitle,
+            productionYear=productionYear,
+            season=season,
+            episode=episode,
+            artist=artist,
+            artworkTitle=artworkTitle,
+            artworkDescription=artworkDescription,
+            artworkYear=artworkYear,
+            size=size,
+            currentLocation=currentLocation,
+            sceneDescription=sceneDescription,
+            sceneImgUrl=sceneImgUrl,
+        )
+
+        try:
+            # Save the reference to the database
+            db.session.add(new_reference)
+            db.session.commit()
+
+            message = f"Reference created successfully. created_reference: {new_reference.id}"
+
+            return AddReferenceToApproveMutation(success=True, message=message)
+        except Exception as e:
+            # Handle any errors that may occur during the database operation
+            return AddReferenceToApproveMutation(
+                success=False, message=f"Error creating reference: {str(e)}"
+            )
+
+
+# GRAPHIQL EX
+
+# mutation {
+#   addInformation(
+# 		artist: "Frida Kahlo",
+#     artworkTitle: "Self-Portrait as a Tehuana",
+#     year: 1943,
+#     size: "76 cm x 61 cm",
+#     currentLocation: "North Carolina Museum of Art",
+#     description: "The original piece, Kahlo’s Self Portrait as a Tehuana...",
+#     productionType: "series",
+#     productionTitle: "Euphoria",
+#     season: 2,
+#     episode: 4,
+#     sceneDescription: "Jules recreates a famous work of art by Frida Kahlo, appearing with a portrait of love interest Rue painted on her forehead."
+#   ) {
+#     success
+#     message
+#   }
+# }

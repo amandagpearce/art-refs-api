@@ -27,6 +27,7 @@ class SeriesScene(db.Model):
     sceneDescription = db.Column(db.String, nullable=False)
     season = db.Column(Integer)
     episode = db.Column(Integer)
+    sceneImgUrl = db.Column(db.String)
 
     # Define the relationship directly to the Artwork model
     artwork = db.relationship("Artwork", back_populates="series_scenes")

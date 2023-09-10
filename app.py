@@ -1,10 +1,12 @@
 import os
 
-from flask import Flask
+from flask import Flask, g, request
 from flask_graphql import GraphQLView
 from flask_migrate import Migrate
 from flask_cors import CORS
 from graphene import Schema
+from werkzeug.datastructures import FileStorage
+import json
 
 
 from trakt_api import fetch_and_populate_series, fetch_and_populate_movies
@@ -34,20 +36,23 @@ def create_app(db_url=None):
         "sqlite:///database.db",  # default to sqlite if no database_url
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    db.init_app(app)  # initializes sqlalchemy
-    migrate = Migrate(app, db)  # noqa
+    db.init_app(app)  # initializes SQLAlchemy
+    migrate = Migrate(app, db)
 
     with app.app_context():
-        db.create_all()  # creating the db
+        db.create_all()  # creating the database tables
 
         schema = Schema(query=RootQuery, mutation=RootMutation)
 
-        # Define endpoints for Series and Movies
         app.add_url_rule(
             "/graphql",
             view_func=GraphQLView.as_view(
-                "graphql", schema=schema, graphiql=True
+                "graphql",
+                schema=schema,
+                graphiql=True,
+                context={"parsed_operations": None},
             ),
+            methods=["GET", "POST"],
         )
 
         # fetch series from trakt
@@ -56,4 +61,5 @@ def create_app(db_url=None):
 
         if MoviesModel.query.count() == 0:
             fetch_and_populate_movies()
+
     return app
