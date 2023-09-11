@@ -221,6 +221,7 @@ class AddInformationMutation(graphene.Mutation):
 
 class AddReferenceToApproveMutation(graphene.Mutation):
     class Arguments:
+        id = graphene.Int()
         productionType = graphene.String(required=True)
         productionTitle = graphene.String(required=True)
         productionYear = graphene.Int(required=True)
@@ -247,6 +248,7 @@ class AddReferenceToApproveMutation(graphene.Mutation):
         artist,
         artworkTitle,
         sceneDescription,
+        id=None,
         artworkDescription=None,
         season=None,
         episode=None,
@@ -255,8 +257,46 @@ class AddReferenceToApproveMutation(graphene.Mutation):
         currentLocation=None,
         sceneImgUrl=None,
     ):
-        print("sceneImgUrl")
-        print(sceneImgUrl)
+        print("id")
+        print(id)
+        if id:
+            # Check if a record with the provided ID exists in the database
+            existing_reference = References.query.get(id)
+
+            print("existing_reference")
+            print(existing_reference)
+
+            if existing_reference:
+                # Update the existing record with the new values
+                existing_reference.productionType = productionType
+                existing_reference.productionTitle = productionTitle
+                existing_reference.productionYear = productionYear
+                existing_reference.season = season
+                existing_reference.episode = episode
+                existing_reference.artist = artist
+                existing_reference.artworkTitle = artworkTitle
+                existing_reference.artworkDescription = artworkDescription
+                existing_reference.artworkYear = artworkYear
+                existing_reference.size = size
+                existing_reference.currentLocation = currentLocation
+                existing_reference.sceneDescription = sceneDescription
+
+                try:
+                    # Commit the changes to the database
+                    db.session.commit()
+
+                    message = f"Reference {existing_reference.id} updated successfully"
+
+                    return AddReferenceToApproveMutation(
+                        success=True, message=message
+                    )
+                except Exception as e:
+                    # Handle any errors that may occur during the database update
+                    return AddReferenceToApproveMutation(
+                        success=False,
+                        message=f"Error updating reference: {str(e)}",
+                    )
+
         # Create a new reference object
         new_reference = References(
             productionType=productionType,
@@ -287,6 +327,38 @@ class AddReferenceToApproveMutation(graphene.Mutation):
             return AddReferenceToApproveMutation(
                 success=False, message=f"Error creating reference: {str(e)}"
             )
+
+
+class DeletePendingReferenceMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int()
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    @staticmethod
+    def mutate(root, info, id):
+        try:
+            existing_reference = References.query.get(id)
+            if existing_reference:
+                # Delete the reference
+                db.session.delete(existing_reference)
+
+                # Commit the transaction to apply the deletion
+                db.session.commit()
+
+                # Return a success message
+                return DeletePendingReferenceMutation(
+                    success=True, message="Reference deleted successfully"
+                )
+            else:
+                # Return an error message if the reference was not found
+                return DeletePendingReferenceMutation(
+                    success=False, message="Reference not found"
+                )
+        except Exception as e:
+            # Handle any errors that may occur during the deletion
+            return DeletePendingReferenceMutation(success=False, message=str(e))
 
 
 # GRAPHIQL EX

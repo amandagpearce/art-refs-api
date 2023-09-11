@@ -12,6 +12,7 @@ from shared.queries import ReferencesQuery
 from shared.mutations import (
     AddInformationMutation,
     AddReferenceToApproveMutation,
+    DeletePendingReferenceMutation,
 )
 
 
@@ -54,6 +55,7 @@ class RootMutation(ObjectType):
     create_reference = (
         AddReferenceToApproveMutation.Field()
     )  # will receive frontend form data to be approved
+    delete_reference = DeletePendingReferenceMutation.Field()
 
 
 # mutation {
