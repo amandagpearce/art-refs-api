@@ -7,6 +7,8 @@ from series.queries import SeriesQuery
 from movies.types import MoviesType, MovieSceneType
 from movies.queries import MoviesQuery
 
+from shared.types import ReferencesType
+from shared.queries import ReferencesQuery
 from shared.mutations import (
     AddInformationMutation,
     AddReferenceToApproveMutation,
@@ -39,10 +41,19 @@ class RootQuery(ObjectType):
         resolver=MoviesQuery.resolve_scenes,
     )
 
+    references = Field(
+        List(ReferencesType),
+        resolver=ReferencesQuery.resolve_references,
+    )
+
 
 class RootMutation(ObjectType):
-    add_information = AddInformationMutation.Field()
-    create_reference = AddReferenceToApproveMutation.Field()
+    add_information = (
+        AddInformationMutation.Field()
+    )  # will get the entire data and distribute across official tables
+    create_reference = (
+        AddReferenceToApproveMutation.Field()
+    )  # will receive frontend form data to be approved
 
 
 # mutation {
