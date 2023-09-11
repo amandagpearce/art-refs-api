@@ -1,15 +1,6 @@
 import graphene
 from graphene import ObjectType
 import requests
-import boto3
-import os
-import mimetypes
-from botocore.exceptions import NoCredentialsError
-from uuid import uuid4
-from dotenv import load_dotenv
-import threading
-import base64
-import io
 
 from graphene_file_upload.scalars import Upload  # Import the Upload scalar
 from graphql import GraphQLError
@@ -25,16 +16,20 @@ from db import db
 class AddInformationMutation(graphene.Mutation):
     class Arguments:
         productionType = graphene.String(required=True)
+        productionTitle = graphene.String()
+        productionYear = graphene.Int(required=True)
+
         artist = graphene.String(required=True)
         artworkTitle = graphene.String(required=True)
-        year = graphene.Int(required=True)
+        artworkDescription = graphene.String()
+        artworkYear = graphene.Int()
         size = graphene.String(required=True)
         currentLocation = graphene.String(required=True)
-        description = graphene.String(required=True)
-        productionTitle = graphene.String()
+
+        sceneDescription = graphene.String()
         season = graphene.Int()
         episode = graphene.Int()
-        sceneDescription = graphene.String()
+        sceneImgUrl = graphene.String()
 
     success = graphene.Boolean()
     message = graphene.String()
@@ -53,28 +48,56 @@ class AddInformationMutation(graphene.Mutation):
         )
 
         if response.status_code == 200:
-            artwork_url = response.json().get("imageUrl")
-            return artwork_url
+            try:
+                data = response.json()
+                print("data")
+                print(data)
+
+                # Check if "imageUrl" is present in the response
+                if "imageUrl" in data:
+                    # Access and return the "imageUrl" value
+                    image_url = data["imageUrl"]
+                    return image_url
+            except requests.exceptions.JSONDecodeError:
+                # Handle the case where the response doesn't contain valid JSON
+                print("Invalid JSON response")
         else:
             return None
 
     def create_or_get_artwork(
-        artist, artworkTitle, year, size, currentLocation, description
+        artist,
+        artworkTitle,
+        artworkYear,
+        size,
+        currentLocation,
+        artworkDescription,
     ):
         existing_artwork = Artwork.query.filter_by(
             artist=artist, artworkTitle=artworkTitle
         ).first()
 
-        if existing_artwork:
+        if existing_artwork and existing_artwork.imageUrl:
+            print("existing_artwork")
             artwork_id = existing_artwork.id
+
+        elif existing_artwork and not existing_artwork.imageUrl:
+            print("existing_artwork without image")
+            artwork_id = existing_artwork.id  # Retrieve the artwork ID
+            artwork_url = AddInformationMutation.retrieve_artwork_url(
+                artwork_id, artist, artworkTitle
+            )
+
+            existing_artwork.imageUrl = artwork_url
+            db.session.commit()
+
         else:
             new_artwork = Artwork(
                 artist=artist,
                 artworkTitle=artworkTitle,
-                year=year,
+                year=artworkYear,
                 size=size,
                 currentLocation=currentLocation,
-                description=description,
+                description=artworkDescription,
             )
             db.session.add(new_artwork)
             db.session.flush()
@@ -82,34 +105,41 @@ class AddInformationMutation(graphene.Mutation):
             artwork_url = AddInformationMutation.retrieve_artwork_url(
                 artwork_id, artist, artworkTitle
             )
+
+            print("artwork_url")
+            print(artwork_url)
+
             new_artwork.imageUrl = artwork_url
             db.session.commit()
 
         return artwork_id
 
-    def create_or_get_production(productionType, productionTitle):
+    def create_or_get_production(
+        productionType, productionTitle, productionYear
+    ):
         if productionType == "series":
             existing_production = Series.query.filter_by(
-                productionTitle=productionTitle
+                productionTitle=productionTitle, year=productionYear
             ).first()
         else:
             existing_production = Movies.query.filter_by(
-                productionTitle=productionTitle
+                productionTitle=productionTitle, year=productionYear
             ).first()
 
         if existing_production:
             production_id = existing_production.id
-        else:
-            if productionType == "series":
-                new_production = Series(productionTitle=productionTitle)
-            else:
-                new_production = Movies(productionTitle=productionTitle)
+            return production_id
+        # else:
+        #     if productionType == "series":
+        #         new_production = Series(productionTitle=productionTitle)
+        #     else:
+        #         new_production = Movies(productionTitle=productionTitle)
 
-            db.session.add(new_production)
-            db.session.commit()
-            production_id = new_production.id
+        #     db.session.add(new_production)
+        #     db.session.commit()
+        #     production_id = new_production.id
 
-        return production_id
+        # return production_id
 
     def create_scene(
         productionType,
@@ -118,6 +148,7 @@ class AddInformationMutation(graphene.Mutation):
         season,
         episode,
         sceneDescription,
+        sceneImgUrl,
     ):
         if productionType == "series":
             new_scene = SeriesScene(
@@ -126,6 +157,7 @@ class AddInformationMutation(graphene.Mutation):
                 season=season,
                 episode=episode,
                 sceneDescription=sceneDescription,
+                sceneImgUrl=sceneImgUrl,
             )
         else:
             new_scene = MovieScene(
@@ -152,42 +184,32 @@ class AddInformationMutation(graphene.Mutation):
         info,
         artist,
         artworkTitle,
-        year,
+        artworkDescription,
+        artworkYear,
         size,
         currentLocation,
-        description,
         productionType,
+        productionYear,
         productionTitle=None,
         season=None,
         episode=None,
         sceneDescription=None,
+        sceneImgUrl=None,
     ):
         print(productionType)
         if productionType not in ["series", "movie"]:
             return AddInformationMutation(success=False, message="Invalid type")
 
-        print("###")
-        print("artist")
-        print(artist)
-        print("artworkTitle")
-        print(artworkTitle)
-        print("year")
-        print(
-            year,
-        )
-        print("size")
-        print(size)
-        print("currentLocation")
-        print(currentLocation)
-        print("description")
-        print(description)
-        print("###")
-
         artwork_id = AddInformationMutation.create_or_get_artwork(
-            artist, artworkTitle, year, size, currentLocation, description
+            artist,
+            artworkTitle,
+            artworkYear,
+            size,
+            currentLocation,
+            artworkDescription,
         )
         production_id = AddInformationMutation.create_or_get_production(
-            productionType, productionTitle
+            productionType, productionTitle, productionYear
         )
 
         if productionType == "series":
@@ -211,6 +233,7 @@ class AddInformationMutation(graphene.Mutation):
             season,
             episode,
             sceneDescription,
+            sceneImgUrl,
         )
         AddInformationMutation.add_to_association(artwork_id, new_scene.id)
 
