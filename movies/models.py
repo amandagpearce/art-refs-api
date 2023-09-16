@@ -20,6 +20,11 @@ class MovieScene(db.Model):
     )
     sceneDescription = db.Column(db.String, nullable=False)
     sceneImgUrl = db.Column(db.String)
+    movieId = db.Column(
+        db.Integer,
+        db.ForeignKey("movies.id"),
+        nullable=False,
+    )
 
     # Define the relationship directly to the Artwork model
     artwork = db.relationship("Artwork", back_populates="movie_scenes")
