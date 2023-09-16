@@ -11,6 +11,7 @@ class MoviesType(ObjectType):
 
 class MovieSceneType(ObjectType):
     id = Int()
+    movieId = Int()
     artworkId = Int()
     sceneDescription = String()
     sceneImgUrl = String()
