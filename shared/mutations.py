@@ -1,6 +1,8 @@
 import graphene
 from graphene import ObjectType
 import requests
+from sqlalchemy import func
+import re
 
 from graphene_file_upload.scalars import Upload  # Import the Upload scalar
 from graphql import GraphQLError
@@ -10,6 +12,7 @@ from series.models import Series, SeriesScene
 from movies.models import Movies, MovieScene
 from shared.models import artwork_scene_association, References
 from shared.types import ReferencesType
+from shared.trakt_api import fetch_and_populate
 from db import db
 
 
@@ -64,6 +67,9 @@ class AddInformationMutation(graphene.Mutation):
         else:
             return None
 
+    def clean_title(title):
+        return "".join(e for e in title if e.isalnum()).lower()
+
     def create_or_get_artwork(
         artist,
         artworkTitle,
@@ -117,29 +123,42 @@ class AddInformationMutation(graphene.Mutation):
     def create_or_get_production(
         productionType, productionTitle, productionYear
     ):
+        # Remove spaces and symbols from the input title
+        sanitized_title = AddInformationMutation.clean_title(productionTitle)
+        sanitized_title = re.sub(r"[^\w\s]", "", sanitized_title).lower()
+
         if productionType == "series":
-            existing_production = Series.query.filter_by(
-                productionTitle=productionTitle, year=productionYear
+            existing_production = Series.query.filter(
+                func.lower(func.replace(Series.productionTitle, " ", ""))
+                == sanitized_title,
+                Series.year == productionYear,
             ).first()
+            print("existing series", existing_production)
         else:
-            existing_production = Movies.query.filter_by(
-                productionTitle=productionTitle, year=productionYear
+            existing_production = Movies.query.filter(
+                func.lower(func.replace(Movies.productionTitle, " ", ""))
+                == sanitized_title,
+                Movies.year == productionYear,
             ).first()
+            print("existing movie", existing_production)
 
         if existing_production:
             production_id = existing_production.id
             return production_id
-        # else:
-        #     if productionType == "series":
-        #         new_production = Series(productionTitle=productionTitle)
-        #     else:
-        #         new_production = Movies(productionTitle=productionTitle)
+        else:
+            print("Creating new production...")
+            new_production_id = fetch_and_populate(
+                productionType, [{"title": productionTitle}]
+            )
 
-        #     db.session.add(new_production)
-        #     db.session.commit()
-        #     production_id = new_production.id
+            if new_production_id is not None:
+                print("New production created!")
+                production_id = new_production_id
+            else:
+                print("Error creating new production")
+                production_id = None
 
-        # return production_id
+        return production_id
 
     def create_scene(
         productionType,
@@ -161,8 +180,10 @@ class AddInformationMutation(graphene.Mutation):
             )
         else:
             new_scene = MovieScene(
+                movieId=production_id,
                 artworkId=artwork_id,
                 sceneDescription=sceneDescription,
+                sceneImgUrl=sceneImgUrl,
             )
 
         db.session.add(new_scene)
