@@ -28,7 +28,7 @@ class RootQuery(ObjectType):
     seriesQuery = Field(SeriesQuery)
     moviesQuery = Field(MoviesQuery)
 
-    series_scenes = Field(
+    seriesScenes = Field(
         List(SeriesSceneType),
         productionId=Int(),
         productionType=String(required=True),
