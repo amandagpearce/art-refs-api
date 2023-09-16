@@ -15,4 +15,6 @@ class SeriesSceneType(ObjectType):
     artworkId = Int()
     sceneDescription = String()
     sceneImgUrl = String()
+    season = Int()
+    episode = Int()
     artworks = List(ArtworkType)

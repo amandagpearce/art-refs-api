@@ -10,10 +10,6 @@ class SeriesQuery(ObjectType):
     series = List(SeriesType)
 
     def resolve_series(self, info):
-        print("##### SeriesModel.query.all()")
-        print(SeriesModel.query.all())
-        print("########################")
-
         return SeriesModel.query.all()
 
     references = List(
@@ -46,6 +42,7 @@ class SeriesQuery(ObjectType):
                         combined_reference = {
                             "id": series_ref.id,  # Use series_ref.id for scene id
                             "sceneDescription": series_ref.sceneDescription,
+                            "sceneImgUrl": series_ref.sceneImgUrl,
                             "artworks": [  # Create a list of artworks
                                 {
                                     "id": artwork.id,
