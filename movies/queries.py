@@ -1,8 +1,13 @@
-from graphene import ObjectType, ID, List, String
+import os
+from dotenv import load_dotenv
+from graphene import ObjectType, String, ID, List
+import requests
+import json
+
 from artwork.models import Artwork as ArtworksModel
 from artwork.types import ArtworkAndSceneType
 from movies.models import Movies as MoviesModel, MovieScene as MovieSceneModel
-from movies.types import MoviesType
+from movies.types import MoviesType, MoviesSearchType
 
 
 class MoviesQuery(ObjectType):
@@ -62,3 +67,44 @@ class MoviesQuery(ObjectType):
                         combined_references.append(combined_reference)
 
             return combined_references
+
+
+class SearchMoviesQuery(ObjectType):
+    searchMovies = List(MoviesSearchType, searchTerm=String(required=True))
+
+    def resolve_search_movies(self, info, searchTerm):
+        load_dotenv()
+        trakt_api_key = os.getenv("TRAKT_API_KEY")
+
+        trakt_api_url = f"https://api.trakt.tv/search/movie?query={searchTerm}"
+
+        headers = {
+            "Content-Type": "application/json",
+            "trakt-api-version": "2",
+            "trakt-api-key": trakt_api_key,
+        }
+
+        response = requests.get(trakt_api_url, headers=headers)
+
+        if response.status_code == 200:
+            movies_data = response.json()
+
+            filtered_movies_data = [
+                item["movie"]
+                for item in movies_data
+                if "movie" in item
+                and searchTerm.lower() in item["movie"]["title"].lower()
+            ]
+
+            final_movies_data = [
+                {"title": item["title"], "year": item["year"]}
+                for item in filtered_movies_data
+            ]
+
+            pretty_series_data = json.dumps(final_movies_data, indent=4)
+            print("movies_data", pretty_series_data)
+
+            # Return a list of SeriesSearchType
+            return [MoviesSearchType(**result) for result in final_movies_data]
+
+        return []

@@ -1,11 +1,11 @@
 from graphene import ObjectType, Field, List, Int, String
 
-from series.types import SeriesType, SeriesSceneType
-from series.queries import SeriesQuery
+from series.types import SeriesType, SeriesSceneType, SeriesSearchType
+from series.queries import SeriesQuery, SearchSeriesQuery
 
 
-from movies.types import MoviesType, MovieSceneType
-from movies.queries import MoviesQuery
+from movies.types import MoviesType, MovieSceneType, MoviesSearchType
+from movies.queries import MoviesQuery, SearchMoviesQuery
 
 from shared.types import ReferencesType
 from shared.queries import ReferencesQuery
@@ -45,6 +45,18 @@ class RootQuery(ObjectType):
     references = Field(
         List(ReferencesType),
         resolver=ReferencesQuery.resolve_references,
+    )
+
+    searchSeriesQuery = Field(
+        List(SeriesSearchType),
+        searchTerm=String(required=True),
+        resolver=SearchSeriesQuery.resolve_search_series,
+    )
+
+    searchMoviesQuery = Field(
+        List(MoviesSearchType),
+        searchTerm=String(required=True),
+        resolver=SearchMoviesQuery.resolve_search_movies,
     )
 
 

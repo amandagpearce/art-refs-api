@@ -16,3 +16,8 @@ class MovieSceneType(ObjectType):
     sceneDescription = String()
     sceneImgUrl = String()
     artworks = List(ArtworkType)
+
+
+class MoviesSearchType(ObjectType):
+    title = String()
+    year = Int()

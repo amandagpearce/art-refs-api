@@ -18,3 +18,8 @@ class SeriesSceneType(ObjectType):
     season = Int()
     episode = Int()
     artworks = List(ArtworkType)
+
+
+class SeriesSearchType(ObjectType):
+    title = String()
+    year = Int()

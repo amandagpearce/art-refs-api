@@ -1,9 +1,14 @@
+import os
+from dotenv import load_dotenv
 from graphene import ObjectType, String, ID, List
+import requests
+import json
+
 from artwork.models import Artwork as ArtworksModel
 from artwork.types import ArtworkAndSceneType
 from series.models import Series as SeriesModel
 from series.models import SeriesScene as SeriesSceneModel
-from series.types import SeriesType
+from series.types import SeriesType, SeriesSearchType
 
 
 class SeriesQuery(ObjectType):
@@ -65,3 +70,45 @@ class SeriesQuery(ObjectType):
             return None
 
         return combined_references
+
+
+class SearchSeriesQuery(ObjectType):
+    searchSeries = List(SeriesSearchType, searchTerm=String(required=True))
+
+    def resolve_search_series(self, info, searchTerm):
+        load_dotenv()
+        trakt_api_key = os.getenv("TRAKT_API_KEY")
+
+        trakt_api_url = f"https://api.trakt.tv/search/show?query={searchTerm}"
+
+        headers = {
+            "Content-Type": "application/json",
+            "trakt-api-version": "2",
+            "trakt-api-key": trakt_api_key,
+        }
+
+        response = requests.get(trakt_api_url, headers=headers)
+
+        if response.status_code == 200:
+            series_data = response.json()
+
+            # Filter the series_data to only include results where searchTerm appears in show.title
+            filtered_series_data = [
+                item["show"]
+                for item in series_data
+                if "show" in item
+                and searchTerm.lower() in item["show"]["title"].lower()
+            ]
+
+            final_series_data = [
+                {"title": item["title"], "year": item["year"]}
+                for item in filtered_series_data
+            ]
+
+            pretty_series_data = json.dumps(final_series_data, indent=4)
+            print("series_data", pretty_series_data)
+
+            # Return a list of SeriesSearchType
+            return [SeriesSearchType(**result) for result in final_series_data]
+
+        return []
