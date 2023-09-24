@@ -57,31 +57,31 @@ def create_app(db_url=None):
         # Populate Series and Movies with initial data
         if SeriesModel.query.count() == 0:
             predefined_series = [
-                {"title": "Euphoria"},
-                {"title": "The Simpsons"},
-                {"title": "Squid Game"},
-                {"title": "The Queen’s Gambit"},
-                {"title": "BoJack Horseman"},
-                {"title": "Futurama"},
-                {"title": "Family Guy"},
-                {"title": "Hannibal"},
-                {"title": "Succession"},
+                {"title": "Euphoria", "year": 2019},
+                {"title": "The Simpsons", "year": 1987},
+                {"title": "Squid Game", "year": 2021},
+                {"title": "The Queen’s Gambit", "year": 2020},
+                {"title": "BoJack Horseman", "year": 2014},
+                {"title": "Futurama", "year": 1999},
+                {"title": "Family Guy", "year": 1999},
+                {"title": "Hannibal", "year": 2013},
+                {"title": "Succession", "year": 2018},
             ]
             print("Populating series table...")
             fetch_and_populate("series", predefined_series)
 
         if MoviesModel.query.count() == 0:
             predefined_movies = [
-                {"title": "Shirley: Visions of Reality"},
-                {"title": "Cabaret"},
-                {"title": "The Dreamers"},
-                {"title": "A clockwork orange"},
-                {"title": "About Schmidt"},
-                {"title": "The Fifth Element"},
-                {"title": "Shutter Island"},
-                {"title": "Passion"},
-                {"title": "Mad Max Fury Road"},
-                {"title": "Forrest Gump"},
+                {"title": "Shirley: Visions of Reality", "year": None},
+                {"title": "Cabaret", "year": None},
+                {"title": "The Dreamers", "year": None},
+                {"title": "A Clockwork Orange", "year": None},
+                {"title": "About Schmidt", "year": None},
+                {"title": "The Fifth Element", "year": None},
+                {"title": "Shutter Island", "year": None},
+                {"title": "Passion", "year": None},
+                {"title": "Mad Max Fury Road", "year": None},
+                {"title": "Forrest Gump", "year": None},
             ]
             print("Populating movies table...")
             fetch_and_populate("movie", predefined_movies)
