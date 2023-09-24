@@ -1,17 +1,12 @@
 import graphene
-from graphene import ObjectType
 import requests
 from sqlalchemy import func
 import re
-
-from graphene_file_upload.scalars import Upload  # Import the Upload scalar
-from graphql import GraphQLError
 
 from artwork.models import Artwork
 from series.models import Series, SeriesScene
 from movies.models import Movies, MovieScene
 from shared.models import artwork_scene_association, References
-from shared.types import ReferencesType
 from shared.trakt_api import fetch_and_populate
 from db import db
 
@@ -38,15 +33,12 @@ class AddInformationMutation(graphene.Mutation):
     message = graphene.String()
 
     @staticmethod
-    def retrieve_artwork_url(artworkId, artist, artworkTitle):
-        # Make your API call here to retrieve the URL based on artist and artworkTitle
-        # Replace the following line with your actual API call
+    def retrieve_artwork_url(artist, artworkTitle):
         response = requests.get(
             "http://127.0.0.1:9000/get_image_url",
             params={
                 "artist": artist,
                 "artworkTitle": artworkTitle,
-                "artworkId": artworkId,
             },
         )
 
@@ -56,13 +48,10 @@ class AddInformationMutation(graphene.Mutation):
                 print("data")
                 print(data)
 
-                # Check if "imageUrl" is present in the response
                 if "imageUrl" in data:
-                    # Access and return the "imageUrl" value
                     image_url = data["imageUrl"]
                     return image_url
             except requests.exceptions.JSONDecodeError:
-                # Handle the case where the response doesn't contain valid JSON
                 print("Invalid JSON response")
         else:
             return None
@@ -90,7 +79,7 @@ class AddInformationMutation(graphene.Mutation):
             print("existing_artwork without image")
             artwork_id = existing_artwork.id  # Retrieve the artwork ID
             artwork_url = AddInformationMutation.retrieve_artwork_url(
-                artwork_id, artist, artworkTitle
+                artist, artworkTitle
             )
 
             existing_artwork.imageUrl = artwork_url
@@ -109,7 +98,7 @@ class AddInformationMutation(graphene.Mutation):
             db.session.flush()
             artwork_id = new_artwork.id
             artwork_url = AddInformationMutation.retrieve_artwork_url(
-                artwork_id, artist, artworkTitle
+                artist, artworkTitle
             )
 
             print("artwork_url")
@@ -148,7 +137,8 @@ class AddInformationMutation(graphene.Mutation):
         else:
             print("Creating new production...")
             new_production_id = fetch_and_populate(
-                productionType, [{"title": productionTitle}]
+                productionType,
+                [{"title": productionTitle, "year": productionYear}],
             )
 
             if new_production_id is not None:
@@ -169,6 +159,17 @@ class AddInformationMutation(graphene.Mutation):
         sceneDescription,
         sceneImgUrl,
     ):
+        print("create_scene")
+        print(
+            productionType,
+            production_id,
+            artwork_id,
+            season,
+            episode,
+            sceneDescription,
+            sceneImgUrl,
+        )
+
         if productionType == "series":
             new_scene = SeriesScene(
                 seriesId=production_id,
@@ -189,6 +190,8 @@ class AddInformationMutation(graphene.Mutation):
         db.session.add(new_scene)
         db.session.commit()
 
+        print("new_scene", new_scene)
+
         return new_scene
 
     def add_to_association(artworkId, sceneId):
@@ -199,7 +202,6 @@ class AddInformationMutation(graphene.Mutation):
         )
         db.session.commit()
 
-    # @staticmethod
     def mutate(
         self,
         info,
@@ -239,13 +241,25 @@ class AddInformationMutation(graphene.Mutation):
             ).first()
         else:
             existing_scene = MovieScene.query.filter_by(
-                artworkId=artwork_id
+                movieId=production_id, artworkId=artwork_id
             ).first()
 
         if existing_scene:
             return AddInformationMutation(
                 success=False, message="Scene record already exists."
             )
+
+        print("scene does not exist")
+
+        print(
+            productionType,
+            production_id,
+            artwork_id,
+            season,
+            episode,
+            sceneDescription,
+            sceneImgUrl,
+        )
 
         new_scene = AddInformationMutation.create_scene(
             productionType,
@@ -256,6 +270,9 @@ class AddInformationMutation(graphene.Mutation):
             sceneDescription,
             sceneImgUrl,
         )
+
+        print("mutate fn new_scene", new_scene)
+
         AddInformationMutation.add_to_association(artwork_id, new_scene.id)
 
         return AddInformationMutation(
@@ -341,7 +358,6 @@ class AddReferenceToApproveMutation(graphene.Mutation):
                         message=f"Error updating reference: {str(e)}",
                     )
 
-        # Create a new reference object
         new_reference = References(
             productionType=productionType,
             productionTitle=productionTitle,
@@ -359,7 +375,6 @@ class AddReferenceToApproveMutation(graphene.Mutation):
         )
 
         try:
-            # Save the reference to the database
             db.session.add(new_reference)
             db.session.commit()
 
@@ -367,7 +382,6 @@ class AddReferenceToApproveMutation(graphene.Mutation):
 
             return AddReferenceToApproveMutation(success=True, message=message)
         except Exception as e:
-            # Handle any errors that may occur during the database operation
             return AddReferenceToApproveMutation(
                 success=False, message=f"Error creating reference: {str(e)}"
             )
