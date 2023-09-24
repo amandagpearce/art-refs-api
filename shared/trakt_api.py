@@ -39,50 +39,67 @@ def fetch_and_populate(production_type, production_data):
     for production_info in production_data:
         print("production_info", production_info)
         production_title = production_info["title"]
-        trakt_api_url = f"https://api.trakt.tv/search/{api_endpoint}?query={production_title}"
+        production_year = production_info["year"]
 
-        response = requests.get(trakt_api_url, headers=headers)
+        if production_year and production_title:
+            trakt_api_url = f"https://api.trakt.tv/search/{api_endpoint}?query={production_title}"
 
-        if response.status_code == 200:
-            production_data = response.json()
+            response = requests.get(trakt_api_url, headers=headers)
 
-            if production_data:
-                production_data_found = production_data[
-                    0
-                ]  # Get the first result from search
+            if response.status_code == 200:
+                trakt_response = response.json()
+                print("trakt_response", trakt_response)
 
-                production_endpoint = api_endpoint
+                if trakt_response:
+                    # Check if there are multiple results
+                    if len(trakt_response) > 1:
+                        # Iterate through the results and find the one with a matching production_year
+                        for result in trakt_response:
+                            if result[api_endpoint]["year"] == production_year:
+                                selected_result = result
+                                break  # Stop iterating once a match is found
 
-                trakt_id = production_data_found[production_endpoint]["ids"][
-                    "trakt"
-                ]
-                production_title = production_data_found[production_endpoint][
-                    "title"
-                ]
-                production_year = production_data_found[production_endpoint][
-                    "year"
-                ]
+                        # If no match was found, you can choose a different handling logic or raise an exception
+                        if selected_result is None:
+                            print(
+                                "No matching result found for the specified production_year."
+                            )
 
-                poster_url = fetch_poster(
-                    production_data_found[production_endpoint]["ids"]["tmdb"],
-                    tmdb_base_url,
-                )
+                    # If there's only one result, select it
+                    elif len(trakt_response) == 1:
+                        selected_result = trakt_response[0]
 
-                if (
-                    trakt_id
-                    and production_title
-                    and production_year
-                    and poster_url
-                ):
-                    production_model = model_class(
-                        id=trakt_id,
-                        productionTitle=production_title,
-                        year=production_year,
-                        imageUrl=poster_url,
+                    print("selected_result", selected_result)
+
+                    trakt_id = selected_result[api_endpoint]["ids"]["trakt"]
+
+                    poster_url = fetch_poster(
+                        selected_result[api_endpoint]["ids"]["tmdb"],
+                        tmdb_base_url,
                     )
-                    db.session.add(production_model)
-                    db.session.commit()
 
-                    if len(production_data) == 1:
-                        print("return trakt_id", trakt_id)
-                        return trakt_id
+                    print("trakt_id", trakt_id)
+                    print("poster_url", poster_url)
+
+                    if trakt_id and poster_url:
+                        production_model = model_class(
+                            id=trakt_id,
+                            productionTitle=production_title,
+                            year=production_year,
+                            imageUrl=poster_url,
+                        )
+                        db.session.add(production_model)
+                        db.session.commit()
+
+                        print("trakt_id", trakt_id)
+                        print("len(production_data)", len(production_data))
+
+                        if len(production_data) == 1:
+                            print("return trakt_id", trakt_id)
+                            return trakt_id
+                    else:
+                        print("Trakt query did not return data")
+                        return
+        else:
+            print("production_year and production_title must be provided.")
+            return
