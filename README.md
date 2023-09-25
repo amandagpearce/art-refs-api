@@ -11,6 +11,7 @@ API pública e gratuita utilizada neste projeto para recuperar informações de 
 É necessário se cadastrar no site oficial e criar um "Trakt API app" para gerar uma API Key necessária para consumir os dados (que deve ser acrescentada no .env como descrito [aqui](https://github.com/amandagpearce/art-refs-api#arquivo-env)). 
 A API possui uma [documentação detalhada aqui](https://trakt.docs.apiary.io/#introduction/verbs) de como se cadastrar, gerar a API Key e fazer os requests.
 Endpoints utilizados:
+
 | Endpoint                               | Descrição                               |
 | -------------------------------------- | --------------------------------------- |
 | https://api.trakt.tv/search/show       | Retorna informações sobre séries.       |
