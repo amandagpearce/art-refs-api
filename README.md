@@ -14,8 +14,8 @@ Endpoints utilizados:
 
 | Endpoint                               | Descrição                               |
 | -------------------------------------- | --------------------------------------- |
-| https://api.trakt.tv/search/show       | Retorna informações sobre séries.       |
-| https://api.trakt.tv/search/movie      | Retorna informações sobre filmes.       |
+| `https://api.trakt.tv/search/show`       | Retorna informações sobre séries.       |
+| `https://api.trakt.tv/search/movie`     | Retorna informações sobre filmes.       |
 
 ---
 
@@ -26,8 +26,8 @@ Endpoints utilizados:
 
 | Endpoint                                   | Descrição                                |
 | ------------------------------------------ | ---------------------------------------- |
-| https://api.themoviedb.org/3/tv/<id>       | Retorna a url do poster da referida id.  |
-| https://api.themoviedb.org/3/movie/<id>    | Retorna a url do poster da referida id.  |
+| `https://api.themoviedb.org/3/tv/<id>`       | Retorna a url do poster da referida id.  |
+| `https://api.themoviedb.org/3/movie/<id>`    | Retorna a url do poster da referida id.  |
 
 ---
 
@@ -37,7 +37,7 @@ Endpoints utilizados:
 
 | Endpoint                                   | Descrição                                |
 | ------------------------------------------ | ---------------------------------------- |
-| http://127.0.0.1:9000/get_image_url        | Retorna a url da imagem da obra de arte. |
+| `http://127.0.0.1:9000/get_image_url`       | Retorna a url da imagem da obra de arte. |
 
 ---
 
