@@ -23,6 +23,7 @@ Endpoints utilizados:
 API pública e gratuita utilizada neste projeto para recuperar o endereço da imagem que será usada como poster para cada filme ou série exibidos na [Home do front-end](https://github.com/amandagpearce/got-that-ref#home).
 Na response das requisições do Trakt é fornecida a id do filme/série no TMDB, com essa id, o endereço da imagem do poster é retornado. É necessário se cadastrar no site oficial para gerar uma API Key (que deve ser acrescentada no .env como descrito [aqui](https://github.com/amandagpearce/art-refs-api#arquivo-env)). A API possui uma [documentação detalhada aqui](https://developer.themoviedb.org/reference/intro/getting-started) de como se cadastrar, gerar a API Key e fazer os requests.
 Endpoints utilizados:
+
 | Endpoint                                   | Descrição                                |
 | ------------------------------------------ | ---------------------------------------- |
 | https://api.themoviedb.org/3/tv/<id>       | Retorna a url do poster da referida id.  |
@@ -33,6 +34,7 @@ Endpoints utilizados:
 3. [Google Image Service](https://github.com/amandagpearce/google-image-service)
 API Rest criada também para este trabalho, utiliza a Google's Programmable Search Engine para buscar uma imagem da obra de arte referenciada pelo filme ou série, de acordo com o cadastro realizado no [front-end](https://github.com/amandagpearce/got-that-ref#send-a-reference). Informações mais detalhadas sobre licensas e utilização estão no [repositório do projeto](https://github.com/amandagpearce/google-image-service). 
 Endpoints utilizados:
+
 | Endpoint                                   | Descrição                                |
 | ------------------------------------------ | ---------------------------------------- |
 | http://127.0.0.1:9000/get_image_url        | Retorna a url da imagem da obra de arte. |
