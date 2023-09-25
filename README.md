@@ -3,7 +3,7 @@
 Projeto criado como componente B do MVP da disciplina de Back-end avançado do curso de pós-graduação em Desenvolvimento Full Stack da PUC-Rio. 
 
 ## O que é?
-API Graphql que utiliza as APIs públicas do `Trakt` e `TMDB` mais a aplicação própria `Google Image Service` e executa queries e mutations em um banco de dados sqlite.
+API GraphQL que utiliza as APIs públicas do `Trakt` e `TMDB` mais a aplicação própria `Google Image Service` e executa queries e mutations em um banco de dados sqlite a partir de requests do [front-end](https://github.com/amandagpearce/got-that-ref) (Componente A) e do GraphiQL Playground disponível após instalação do projeto. 
 
 ## API's utilizadas 
 1. [Trakt API](https://trakt.docs.apiary.io/#introduction/verbs)
