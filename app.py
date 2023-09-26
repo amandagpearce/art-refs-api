@@ -72,17 +72,18 @@ def create_app(db_url=None):
 
         if MoviesModel.query.count() == 0:
             predefined_movies = [
-                {"title": "Shirley: Visions of Reality", "year": None},
-                {"title": "Cabaret", "year": None},
-                {"title": "The Dreamers", "year": None},
-                {"title": "A Clockwork Orange", "year": None},
-                {"title": "About Schmidt", "year": None},
-                {"title": "The Fifth Element", "year": None},
-                {"title": "Shutter Island", "year": None},
-                {"title": "Passion", "year": None},
-                {"title": "Mad Max Fury Road", "year": None},
-                {"title": "Forrest Gump", "year": None},
+                {"title": "Shirley: Visions of Reality", "year": 2013},
+                {"title": "Cabaret", "year": 1972},
+                {"title": "The Dreamers", "year": 2003},
+                {"title": "A Clockwork Orange", "year": 1971},
+                {"title": "About Schmidt", "year": 2002},
+                {"title": "The Fifth Element", "year": 1997},
+                {"title": "Shutter Island", "year": 2010},
+                {"title": "Passion", "year": 2012},
+                {"title": "Mad Max Fury Road", "year": 2015},
+                {"title": "Forrest Gump", "year": 1994},
             ]
+
             print("Populating movies table...")
             fetch_and_populate("movie", predefined_movies)
 
