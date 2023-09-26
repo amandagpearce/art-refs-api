@@ -68,11 +68,16 @@ Substitua `keystringaqui` pelas suas keys.
 ## Instalação sem Docker
 1. Clone o projeto
 2. Crie o arquivo .env como descrito acima e cole na raiz do projeto 
-3. Na raiz do projeto, rode o comando:
+3. Crie e ative um ambiente virtual
+4. Na raiz do projeto, faça a instalação das dependências com o comando:
+```bash
+  pip install requirements.txt
+```
+5. Na raiz do projeto, rode projeto com o comando:
 ```bash
   flask run --host 0.0.0.0 --port 4000
 ```
-4. Acesse a documentação GraphiQL no endereço http://127.0.0.1:4000/graphiql
+6. Acesse a documentação GraphiQL no endereço http://127.0.0.1:4000/graphiql
 
 ---
 
