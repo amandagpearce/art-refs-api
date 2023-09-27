@@ -57,7 +57,9 @@ class AddInformationMutation(graphene.Mutation):
             return None
 
     def clean_title(title):
-        return "".join(e for e in title if e.isalnum()).lower()
+        # Remove white spaces and convert to lowercase
+        cleaned_title = title.replace(" ", "").lower()
+        return cleaned_title
 
     def create_or_get_artwork(
         artist,
@@ -114,7 +116,8 @@ class AddInformationMutation(graphene.Mutation):
     ):
         # Remove spaces and symbols from the input title
         sanitized_title = AddInformationMutation.clean_title(productionTitle)
-        sanitized_title = re.sub(r"[^\w\s]", "", sanitized_title).lower()
+        # sanitized_title = re.sub(r"[^\w\s]", "", sanitized_title).lower()
+        print("sanitized title", sanitized_title)
 
         if productionType == "series":
             existing_production = Series.query.filter(
@@ -129,6 +132,8 @@ class AddInformationMutation(graphene.Mutation):
                 == sanitized_title,
                 Movies.year == productionYear,
             ).first()
+
+            print("sanitized_title", sanitized_title)
             print("existing movie", existing_production)
 
         if existing_production:
